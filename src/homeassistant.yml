@@ -1,0 +1,26 @@
+version: '3.9'
+
+services:
+  homeassistant:
+    container_name: homeassistant
+    image: "ghcr.io/home-assistant/home-assistant:stable"
+    volumes:
+      - /srv/dev-disk-by-uuid-720cfb7f-b874-45a8-8232-d6e97c0f124a/shared/HomeAssistant/config:/config
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - TZ=Europe/Lisbon    # Set your timezone
+    restart: unless-stopped
+    network_mode: host
+
+  mqtt:
+    container_name: mqtt
+    image: eclipse-mosquitto:latest
+    ports:
+      - "1883:1883"   # MQTT
+      - "9001:9001"   # WebSocket
+    volumes:
+      - /srv/dev-disk-by-uuid-720cfb7f-b874-45a8-8232-d6e97c0f124a/shared/HomeAssistant/mqtt/config:/mosquitto/config
+      - /srv/dev-disk-by-uuid-720cfb7f-b874-45a8-8232-d6e97c0f124a/shared/HomeAssistant/mqtt/data:/mosquitto/data
+      - /srv/dev-disk-by-uuid-720cfb7f-b874-45a8-8232-d6e97c0f124a/shared/HomeAssistant/mqtt/log:/mosquitto/log
+    restart: unless-stopped
+

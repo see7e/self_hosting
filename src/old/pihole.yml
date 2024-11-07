@@ -1,0 +1,27 @@
+services:
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    environment:
+      - WEBPASSWORD=${PASSWRD}    # Set a secure password after
+      - ServerIP=192.168.1.63     # Configured IP with macvlan
+    volumes:
+      - ./pihole:/etc/pihole
+      - ./dnsmasq:/etc/dnsmasq.d
+    ports:
+      - "53:53/udp"      # DNS port
+      - "67:67/udp"      # DHCP port
+      - "80:80/tcp"
+      - "443:443/tcp"
+      - "53:53/tcp"
+    networks:
+      ph_network:
+        ipv4_address: 192.168.1.63  # Set the specific IP if desired
+    restart: always
+    cap_add:
+      - NET_ADMIN
+
+networks:
+  ph_network:
+    external: true  # This specifies that the network is created outside of this compose file.
+

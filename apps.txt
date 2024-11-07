@@ -1,0 +1,5 @@
+# omv, 192.168.1.75:80, omv.serverino.io
+pihole, 192.168.1.63:80, pihole.serverino.io
+jellyfin, 192.168.1.75:8096, jellyfin.serverino.io
+firefly, 192.168.1.75:8081, firefly.serverino.io
+homeassitant, 192.168.1.75:8123, homeassistant.serverino.io
