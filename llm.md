@@ -18,6 +18,7 @@ Operating without cloud services or subscriptions
 The design separates the voice endpoint (microphone and speaker) from the AI server, allowing inexpensive voice devices to leverage a centralized AI backend.
 
 High-Level Architecture
+```mermaid
 flowchart TD
     Voice["Voice Device<br/>(Mic + Speaker)"]
     STT["Speech-to-Text<br/>(Faster Whisper)"]
@@ -30,7 +31,7 @@ flowchart TD
     LLM --> HA
     HA --> TTS
     TTS --> Voice
-
+```
 
 The voice device only captures audio and plays responses. All speech recognition, reasoning, automation, and speech synthesis are performed on the server.
 
@@ -71,6 +72,7 @@ Microphone support
 Speaker support
 Ideal for deploying multiple rooms
 4. Overall System Architecture
+```mermaid
 flowchart TB
 
     subgraph Proxmox Server
@@ -87,13 +89,14 @@ flowchart TB
     OLLAMA --> HA
     HA --> TTS
     TTS --> Voice
+```
 
 5. Request Processing Flow
 
 Example request:
 
 "Turn off every downstairs light."
-
+```mermaid
 sequenceDiagram
     participant User
     participant Voice as Voice Device
@@ -109,7 +112,7 @@ sequenceDiagram
     HA-->>LLM: Success
     LLM->>Piper: Generate response
     Piper->>Voice: Play confirmation
-
+```
 6. Home Assistant Integration
 
 The LLM should never directly manipulate devices.
@@ -117,6 +120,7 @@ The LLM should never directly manipulate devices.
 Instead, Home Assistant exposes entities, services, and scripts as tools that the LLM can invoke.
 
 Example: "Good night"
+```mermaid
 flowchart LR
     User["User: Good night"] --> LLM
 
@@ -126,7 +130,7 @@ flowchart LR
     HA --> Doors["Lock doors"]
     HA --> Alarm["Arm alarm"]
     HA --> Climate["Lower thermostat"]
-
+```
 
 The automation encapsulates the logic, while the LLM simply decides which automation to execute.
 
@@ -266,6 +270,7 @@ If a capable GPU is installed, CPU performance becomes less critical for LLM inf
 
 One AI server can power multiple voice endpoints.
 
+```mermaid
 flowchart LR
 
     Kitchen["Kitchen Voice Device"] --> Server
@@ -274,7 +279,7 @@ flowchart LR
     Garage["Garage Voice Device"] --> Server
 
     Server["Proxmox Server<br/>Home Assistant<br/>Ollama<br/>Whisper<br/>Piper"]
-
+```
 
 Each room only requires:
 
@@ -307,6 +312,7 @@ Add long-term memory (optional)
 Implement Retrieval-Augmented Generation (RAG) for local documents and notes
 Deploy additional voice endpoints throughout the home
 Final Recommended Stack
+```mermaid
 flowchart LR
 
     Voice["Voice Device"]
@@ -322,6 +328,7 @@ flowchart LR
     Ollama --> HA
     HA --> Piper
     Piper --> Voice
+```
 
 Software
 Home Assistant — Home automation and orchestration
