@@ -1,8 +1,22 @@
 # INFO
 
-u=see7ee
-id -u see7e=1000
-id -g see7e=100
+homelab/
+├── docs/                 # Architecture and operational documentation
+├── terraform/            # Proxmox infrastructure (future)
+├── ansible/              # Host configuration
+│   ├── docker-host/
+│   ├── omv/
+│   └── raspberry-pi/
+├── docker/
+│   ├── monitoring/
+│   ├── media/
+│   ├── finance/
+│   ├── cloud/
+│   └── home/
+├── scripts/              # Utility scripts
+└── backups/              # Backup metadata or automation
+
+***
 
 # Instalations
 
