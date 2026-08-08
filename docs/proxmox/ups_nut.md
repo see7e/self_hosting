@@ -93,13 +93,11 @@ nut-scanner -U
 ## Configure NUT
 
 ### 1. `/etc/nut/nut.conf`
-
 ```ini
 MODE=standalone
 ```
 
 ### 2. `/etc/nut/ups.conf`
-
 ```ini
 [ups]
 driver = usbhid-ups
@@ -110,18 +108,13 @@ desc = "Master Power 650VA"
 pollinterval = 5
 ```
 
----
-
 ### 3. `/etc/nut/upsd.users`
-
 Generate a random password:
-
 ```bash
 openssl rand -base64 24
 ```
 
 Then:
-
 ```ini
 [monuser]
 password = YOUR_RANDOM_PASSWORD
@@ -131,9 +124,7 @@ upsmon primary
 (`master` still works on many versions, but `primary` is the preferred terminology in recent NUT releases.)
 
 ### 4. `/etc/nut/upsmon.conf`
-
 Replace the existing monitor line with:
-
 ```ini
 MONITOR ups@localhost 1 monuser YOUR_RANDOM_PASSWORD primary
 
@@ -145,14 +136,12 @@ FINALDELAY 10
 ```
 
 ### 5. Enable services
-
 ```bash
 systemctl enable nut-server nut-monitor
 systemctl restart nut-server nut-monitor
 ```
 
 Check they're healthy:
-
 ```bash
 systemctl status nut-server
 # ● nut-server.service - Network UPS Tools - power devices information server
@@ -415,3 +404,146 @@ It fits naturally into the Prometheus/Grafana stack you already plan to run.
 > test.battery.start.deep
 > ```
 > Running a quick self-test once a month helps catch aging batteries before they fail during a real outage.
+
+---
+
+# Updates for [NUT Exporter](../../docker-host/docs/nut_exporter.md)
+At `/etc/nut/nut.conf` the `MODE=standalone` only allows to `upsd` to be listening only on localhost:
+```bash
+127.0.0.1:3493
+[::1]:3493
+```
+
+This can be verified with:
+```bash
+dockeradmin@docker-host:/opt/docker/compose/monitoring$ nc -zv 192.168.1.200 3493
+# nc: connect to 192.168.1.200 port 3493 (tcp) failed: Connection refused
+```
+
+So the solution is to change to `MODE=netserver` and:
+```bash
+# at /etc/nut/upsd.conf
+LISTEN 192.168.1.200 3493
+```
+
+Then restart `nut-server` and test connectivity from Docker Host. Your existing Proxmox UPS/driver setup remains unchanged.
+```bash
+root@pve:~# systemctl restart nut-server
+```
+
+## This changes on how nut comunicates with pve?
+No — **`MODE=netserver` does not change how NUT communicates with the UPS or how Proxmox communicates with the UPS driver.** It changes **how NUT exposes its data to other machines**. Right now:
+
+```text
+UPS
+ │ USB
+ ▼
+usbhid-ups
+ │
+ ▼
+upsd
+ │
+ └── localhost only (:3493)
+```
+
+
+### What changes with `MODE=netserver`
+It becomes:
+```text
+                         ┌── upsc / local NUT clients
+                         │
+UPS ──USB──> usbhid-ups ─┴──> upsd
+                              │
+                              │ TCP 3493
+                              ▼
+                         Docker Host
+                              │
+                         nut-exporter
+```
+
+The **USB communication remains exactly the same**.
+
+Your driver: `usbhid-ups` continues talking directly to the UPS, and your existing `upsc ups` should continue working exactly as it does now. In fact, your current output proves the driver is healthy:
+```text
+battery.charge: 100
+ups.status: OL
+input.voltage: 236.6
+output.voltage: 236.2
+ups.load: 12
+```
+
+### What `MODE=netserver` actually means
+NUT has several modes. Your configuration's own documentation describes `netserver` as essentially the standalone configuration **plus network access**, including the appropriate `LISTEN` configuration. 
+
+So we're not changing:
+- USB driver
+- UPS configuration
+- `usbhid-ups`
+- `upsc`
+- UPS monitoring on Proxmox
+- UPS behavior
+- shutdown behavior
+
+We're simply saying:
+> "Allow NUT clients on the network to query this UPS."
+
+That's exactly what the exporter needs.
+
+### One thing I would change from my previous recommendation
+Since this UPS protects your Proxmox host, I'd **keep Proxmox's local NUT functionality intact** and only expose the NUT server on the LAN interface `MODE=netserver` and `LISTEN 192.168.1.200 3493`. That gives us:
+
+```text
+Proxmox local:
+upsc ups
+     │
+     └──────> upsd
+
+Docker Host:
+nut-exporter
+     │
+     └────TCP 3493────> 192.168.1.200
+```
+
+So yes, **`MODE=netserver` is the correct mode for what we're trying to accomplish**, and it shouldn't disrupt your current Proxmox ↔ UPS communication.
+
+## The firewall and networking infra will be handled by RPi (future) is this a concern right now?
+The future RPi firewall/networking layer doesn't need to exist yet for this to work. Right now your network is essentially:
+```text
+Router
+   │
+   ├── RPi
+   │
+   └── Proxmox 192.168.1.200
+          │
+          ├── OMV VM
+          └── Docker Host VM
+```
+
+With `MODE=netserver` and `LISTEN 192.168.1.200 3493`, Proxmox will expose NUT on its LAN interface so the Docker Host can query it.
+
+### The security consideration
+The only concern is that **anything currently able to reach `192.168.1.200:3493` on your LAN could potentially connect to NUT**. For your current homelab, that's generally a reasonable temporary arrangement because:
+- the NUT service is on your private `192.168.1.0/24` LAN;
+- you're not exposing port `3493` through your router;
+- you're not exposing it to the Internet;
+- the exporter will use the existing `monuser` account;
+- later, your RPi can provide the proper firewall/network segmentation.
+
+And importantly, we're binding NUT specifically to: `192.168.1.200:3493` rather than `0.0.0.0:3493`. So we aren't unnecessarily exposing it on every Proxmox interface.
+
+### Future RPi firewall
+When you implement the RPi networking/firewall layer, we can tighten this down to something like:
+
+```text
+Allow:
+Docker Host ───────> Proxmox:3493
+
+Deny:
+Everything else ───> Proxmox:3493
+```
+
+Potentially even better, we can put your monitoring services in an appropriate network/VLAN and only allow the required flows. So **I wouldn't delay the NUT exporter because of the future RPi firewall**.
+```text
+/etc/nut/nut.conf
+MODE=netserver
+```
