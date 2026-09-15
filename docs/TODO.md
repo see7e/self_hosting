@@ -1,0 +1,44 @@
+# TODO
+- [x] Docker Host
+    - monitoring
+        - [x] Prometheus
+        - [x] Grafana
+        - [x] Docker Node Exporter 
+        - [ ] [Docker Scout metrics exporter](https://docs.docker.com/scout/explore/metrics-exporter/)
+        - [x] cAdvisor
+        - [x] Alloy
+        - [x] Proxmox VE Exporter
+        - [x] OpenMediaVault metrics
+        - [x] UPS (NUT exporter)
+        - [x] Home Assistant metrics (dependes on HAOS VM)
+        - [ ] Home Assistant - [AirGradient Air Quality](https://grafana.com/grafana/dashboards/22712-airgradient-air-quality/)
+        - [x] Alertmanager
+        - [x] Grafana alerting
+        - [ ] Raspberry Pi Node Exporter (depends on RPi4b)
+    - dashboard
+        - [x] Glance
+    - media
+        - [ ] Jellyfin
+- [x] Home Assistant OS VM
+- [ ] OrgPi mini - honeypot
+- [ ] RPi4b: network/security layer
+    - [ ] Firewall
+    - [ ] VPN
+    - [ ] DNS / AdGuard
+    - [ ] Routing / egress control
+    - [ ] Honeypot network isolation
+- [ ] Verify network paths
+    - [ ] Docker Host → LAN
+    - [ ] Docker Host → RPi
+    - [ ] Monitoring → RPi
+    - [ ] Internet egress policy
+- [ ] Alertmanager outbound
+    - [ ] Notification provider
+    - [ ] HTTPS-only egress
+    - [ ] Firewall restriction
+    - [ ] Test firing/resolution
+- [ ] Final monitoring hardening
+    - [ ] Alertmanager
+    - [ ] Grafana
+    - [ ] Prometheus
+    - [ ] Exporters

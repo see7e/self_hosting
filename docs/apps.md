@@ -32,7 +32,7 @@ Inside the Ubuntu VM:
 | Grafana       |                          250–400 MB |
 | Prometheus    |                         400 MB–1 GB |
 | Loki          |                          300–700 MB |
-| Promtail      |                             <100 MB |
+| Alloy         |                             <100 MB |
 | Node Exporter |                              <50 MB |
 | cAdvisor      |                           50–150 MB |
 | Jellyfin      |  200–500 MB (excluding transcoding) |
@@ -42,7 +42,25 @@ Inside the Ubuntu VM:
 | Firefly III   |                          150–300 MB |
 | MQTT          |                              <50 MB |
 | ThingsBoard*  |      800 MB–2 GB (Java application) |
+| Sisifus-Bot   |                                     |
+| - idle        |                                     |
+| - monitoring  |                               200MB |
+| - ui          |   currently streamlit     140-150MB |
+| - optmization |                                     |
 
+```bash
+dockeradmin@docker-host:/opt/docker/compose$ docker stats --no-stream --format 'table {{.Name}}\t{{.MemUsage}}\t{{.MemPerc}}'
+NAME                        MEM USAGE / LIMIT     MEM %
+monitoring-prometheus-1     61.88MiB / 5.216GiB   1.16%
+monitoring-alertmanager-1   11.89MiB / 5.216GiB   0.22%
+monitoring-grafana-1        108MiB / 5.216GiB     2.02%
+glance                      7.293MiB / 5.216GiB   0.14%
+monitoring-alloy-1          77.46MiB / 5.216GiB   1.45%
+monitoring-loki-1           68.6MiB / 5.216GiB    1.28%
+monitoring-pve-exporter-1   36.64MiB / 5.216GiB   0.69%
+monitoring-nut-exporter-1   1.336MiB / 5.216GiB   0.03%
+monitoring-cadvisor-1       45.82MiB / 5.216GiB   0.86%
+```
 
 ## Home Assistant OS
 
@@ -57,12 +75,11 @@ Keeping Home Assistant isolated makes upgrades, backups, and device integrations
 Rather than deploying dozens of individual LXCs, a single lightweight Ubuntu Server VM runs Docker and Docker Compose.
 
 Benefits include:
-
-* simplified management
-* version-controlled Docker Compose files
-* straightforward upgrades
-* excellent portability
-* minimal virtualization overhead
+- simplified management
+- version-controlled Docker Compose files
+- straightforward upgrades
+- excellent portability
+- minimal virtualization overhead
 
 ### Dashboard
 #### Glance
@@ -74,26 +91,26 @@ Benefits include:
 Immich's ML container is usually the largest RAM consumer.
 
 It provides:
-* face recognition
-* object recognition
-* smart search
-* duplicate detection features
+- face recognition
+- object recognition
+- smart search
+- duplicate detection features
 
 If you don't care about "find all pictures with dogs/cars/person X", you can reduce the footprint significantly. Options:
 
 ###### Disable ML completely
 You lose:
-* face recognition
-* smart search
-* AI classification
+- face recognition
+- smart search
+- AI classification
 
 You keep:
-* upload
-* albums
-* timeline
-* sharing
-* browsing
-* metadata
+- upload
+- albums
+- timeline
+- sharing
+- browsing
+- metadata
 
 For many people this is enough.
 
@@ -110,10 +127,10 @@ For a home server, small models are usually fine.
 
 ##### 3. Avoid constant background processing
 A lot of RAM/CPU spikes happen when:
-* importing a large photo library
-* generating thumbnails
-* indexing faces
-* transcoding videos
+- importing a large photo library
+- generating thumbnails
+- indexing faces
+- transcoding videos
 
 A good approach:
 1. Import everything once.
@@ -124,9 +141,9 @@ The steady-state usage is much lower than the initial migration.
 
 ##### 4. Limit video transcoding
 Videos are expensive. If your phones upload:
-* 4K videos
-* HDR videos
-* HEVC formats
+- 4K videos
+- HDR videos
+- HEVC formats
 
 processing can become heavy. You can configure Immich to avoid unnecessary transcoding depending on your devices.
 
@@ -151,53 +168,42 @@ If you don't need instant AI indexing, this works well.
 
 ##### 7. Use hardware acceleration if available
 If your server has:
-* Intel Quick Sync
-* NVIDIA GPU
-* AMD GPU
+- Intel Quick Sync
+- NVIDIA GPU
+- AMD GPU
 
 you can move some video processing away from the CPU. This doesn't always reduce RAM directly, but it reduces processing time and system load.
 
 ***
 ### Monitoring
-
-* Grafana
-* Prometheus
-* Loki
-* Promtail
-* Node Exporter
-* cAdvisor
-* garmin-grafana (development)
+- Grafana
+- Prometheus
+- Loki
+- Promtail
+- Node Exporter
+- cAdvisor
+- garmin-grafana (development)
 
 ### Storage & File Services
-
-* OpenMediaVault
-* OpenCloud
+- OpenMediaVault
+- OpenCloud
 
 ### IoT
-
-* ThingsBoard
-* MQTT Broker
+- ~~ThingsBoard~~
+- MQTT Broker
 
 ### Finance
-
-* Firefly III
+- Firefly III
 
 ### Additional Services
-
 Future Docker services can be added without modifying the Proxmox VM layout.
 
----
-
+***
 # Optional LXCs
-
 Some lightweight infrastructure services may later be moved into dedicated LXCs.
 
 Examples include:
-
-* WireGuard
-* Tailscale
-* Caddy
-* Nginx Reverse Proxy
+- Caddy or Nginx (Reverse Proxy)
 
 Keeping these isolated makes experimentation easier while avoiding unnecessary virtual machines.
 

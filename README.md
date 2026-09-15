@@ -1,5 +1,6 @@
 # INFO
 
+```
 homelab/
 ├── docs/                 # Architecture and operational documentation
 ├── terraform/            # Proxmox infrastructure (future)
@@ -15,6 +16,7 @@ homelab/
 │   └── home/
 ├── scripts/              # Utility scripts
 └── backups/              # Backup metadata or automation
+```
 
 ***
 
